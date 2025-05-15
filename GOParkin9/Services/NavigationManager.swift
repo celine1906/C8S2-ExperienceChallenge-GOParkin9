@@ -21,6 +21,15 @@ class NavigationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var heading: CLHeading?
     @Published var isUpdating: Bool = false
     
+    @Published var waypoints: [CLLocationCoordinate2D] = []
+    @Published var currentWaypointIndex: Int = 0
+
+    private var lastDistance: Double = Double.greatestFiniteMagnitude
+    let threshold: Double = 5.0 // meter
+    
+    @Published var arrowAngle: Double = 0.0
+
+    
     override init() {
         super.init()
         
@@ -58,14 +67,39 @@ class NavigationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         checkAuthorization()
     }
     
+    func updateWaypointIfNeeded() {
+        guard currentWaypointIndex < waypoints.count else { return }
+        let target = waypoints[currentWaypointIndex]
+        let dist = distance(to: target)
+        
+        if dist < threshold {
+            currentWaypointIndex += 1
+            print("Moved to next waypoint \(currentWaypointIndex)")
+            lastDistance = Double.greatestFiniteMagnitude
+        } else {
+            if dist > lastDistance + 2.0 {
+                print("⚠️ Menjauh dari waypoint!")
+            }
+            lastDistance = dist
+        }
+    }
+
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let latestLocation = locations.last else { return }
         DispatchQueue.main.async {
             self.location = latestLocation
             self.isUpdating = false
-//            print("Updated location: \(latestLocation.coordinate.latitude), \(latestLocation.coordinate.longitude)")
+            
+            self.updateWaypointIfNeeded()
+            
+            if self.currentWaypointIndex < self.waypoints.count {
+                let dest = self.waypoints[self.currentWaypointIndex]
+                self.arrowAngle = self.angle(to: dest)
+            }
         }
     }
+
     
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         DispatchQueue.main.async {

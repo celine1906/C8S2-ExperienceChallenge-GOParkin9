@@ -413,7 +413,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GOParkin9/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "We need to take photos to save your parking environment.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need to access your camera to enhance your navigation experience.";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "We need your location even when the app is not in use.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to provide better services.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -446,7 +446,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GOParkin9/Info.plist;
-				INFOPLIST_KEY_NSCameraUsageDescription = "We need to take photos to save your parking environment.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need to access your camera to enhance your navigation experience.";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "We need your location even when the app is not in use.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to provide better services.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

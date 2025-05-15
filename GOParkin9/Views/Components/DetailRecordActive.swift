@@ -120,27 +120,27 @@ struct DetailRecordActive: View {
             .frame(height: 20)
         
         HStack(spacing: 16) {
-            Button {
-                print("Navigate")
-                isCompassOpen.toggle()
+            NavigationLink {
+                ARCameraView()
             } label: {
-                HStack {
-                    Image(systemName: "figure.walk")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 15)
-                    
-                    Text("Navigate")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
+                    HStack {
+                        Image(systemName: "figure.walk")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 15)
+                        
+                        Text("Navigate")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue)
+                    .foregroundStyle(Color.white)
+                    .cornerRadius(10)
             }
-            .background(Color.blue)
-            .foregroundStyle(Color.white)
-            .cornerRadius(10)
-            .frame(maxWidth: .infinity)
+
+           
             
             Button {
                 isComplete.toggle()

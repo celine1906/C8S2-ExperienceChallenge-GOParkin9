@@ -43,7 +43,6 @@ struct CompassView: View {
     var speechUtteranceManager = SpeechUtteranceManager()
     
     var targetDestination: CLLocationCoordinate2D {
-
         options.first(where: { $0.id == selectedLocation })?.coordinate ??
             CLLocationCoordinate2D(latitude: 0, longitude: 0)
 

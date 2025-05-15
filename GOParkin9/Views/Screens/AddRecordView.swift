@@ -21,17 +21,20 @@ struct ModalView: View {
     @State private var selectedFloor: String? = nil
     @State private var floors = ["Basement 1", "Basement 2"]
     let dateTime = Date.now
+    
+//    let navigationManager = NavigationManager()
 
-    let savedLocation:CLLocationCoordinate2D
+    let savedLocation:CLLocation
     
     @Environment(\.modelContext) var context
 
-    func addParkingRecord(latitude: Double, longitude: Double, images: [UIImage], floor:String) {
+    func addParkingRecord(latitude: Double, longitude: Double, altitude: Double, images: [UIImage], floor:String) {
         let convertedImages = images.map { ParkingImage(image: $0) }
         
         let record = ParkingRecord(
             latitude: latitude,
             longitude: longitude,
+            altitude: altitude,
             isHistory: false,
             floor: floor,
             createdAt: dateTime,
@@ -62,13 +65,17 @@ struct ModalView: View {
                 Button {
                     if let selected = selectedFloor {
                         print("Button clicked")
-                        addParkingRecord(
-                            latitude: savedLocation.latitude,
-                            longitude: savedLocation.longitude,
-                            images: images,
-                            floor: selected
-                        )
-                        dismiss()
+//                        if let location = navigationManager.location {
+                            addParkingRecord(
+                                latitude: savedLocation.coordinate.latitude,
+                                longitude: savedLocation.coordinate.longitude,
+                                altitude: savedLocation.altitude,
+                                images: images,
+                                floor: selected
+                            )
+                            dismiss()
+                            
+//                        }
                     } else {
                         showingAlertSave.toggle()
                     }
@@ -84,6 +91,10 @@ struct ModalView: View {
                 }
             }
             .padding()
+            
+            Text("Longitude: \(savedLocation.coordinate.longitude)")
+            Text("Latitude: \(savedLocation.coordinate.latitude)")
+            Text("Altitude: \(savedLocation.altitude)")
             
             VStack(alignment: .leading){
                     HStack {

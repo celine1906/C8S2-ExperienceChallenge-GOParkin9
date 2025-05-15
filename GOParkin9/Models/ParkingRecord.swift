@@ -8,12 +8,14 @@
 import Foundation
 import SwiftData
 import CoreLocation
+import UIKit
 
 @Model
 class ParkingRecord: Identifiable {
     var id: UUID = UUID()
     var latitude: Double
     var longitude: Double
+    var altitude: Double
     var isHistory: Bool
     var isPinned: Bool
     var createdAt: Date
@@ -25,6 +27,7 @@ class ParkingRecord: Identifiable {
     init (
         latitude: Double,
         longitude: Double,
+        altitude: Double,
         isHistory: Bool,
         floor: String,
         createdAt: Date,
@@ -33,6 +36,7 @@ class ParkingRecord: Identifiable {
     ) {
         self.latitude = latitude
         self.longitude = longitude
+        self.altitude = altitude
         self.isHistory = false
         self.isPinned = false
         self.createdAt = Date()
@@ -40,4 +44,13 @@ class ParkingRecord: Identifiable {
         self.images = images
         self.floor = floor
     }
+}
+
+struct destinationData: Identifiable {
+    var id: UUID = UUID()
+    var latitude: Double
+    var longitude: Double
+    var altitude: Double
+    var images: UIImage
+    var distance: String
 }
