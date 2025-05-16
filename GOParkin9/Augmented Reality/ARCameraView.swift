@@ -11,10 +11,13 @@ import CoreLocation
 
 struct ARCameraView: View {
     @Environment(\.modelContext) var context
-    @StateObject private var viewModel = ARViewModel()
+    @StateObject private var viewModel: ARViewModel
     @StateObject var navigationManager = NavigationManager()
     @Query(filter: #Predicate<ParkingRecord> { $0.isHistory == false }) var parkingRecords: [ParkingRecord]
     
+    init() {
+        _viewModel = StateObject(wrappedValue: ARViewModel())
+    }
     
 //    @StateObject private var viewModelModal = ARModalViewModel()
 
@@ -42,6 +45,7 @@ struct ARCameraView: View {
             
         }
         .onAppear {
+            viewModel.modelContext = context
             viewModel.loadARView()
 
             // Tunda pemanggilan updateArrow sampai ARView selesai dimuat
@@ -54,7 +58,7 @@ struct ARCameraView: View {
                 if let record = parkingRecords.first {
                     let destination = CLLocationCoordinate2D(latitude: record.latitude, longitude: record.longitude)
                     let bearing = navigationManager.angle(to: destination)
-                    await viewModel.updateArrow(bearing: bearing)
+                    await viewModel.updateArrow(bearing: bearing, at: SIMD3<Float>(0, 0, 0))
                 }
                 
             }
