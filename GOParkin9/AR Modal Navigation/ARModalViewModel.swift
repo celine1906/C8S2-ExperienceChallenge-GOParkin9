@@ -17,11 +17,13 @@ class ARModalViewModel: ObservableObject {
         let distance = currentLocation.distance(from: CLLocation(latitude: destinationCoordinate.latitude, longitude: destinationCoordinate.longitude))
         let formatted = distance > 999 ? String(format: "%.2f km", distance / 1000) : "\(Int(distance)) m"
 
+        let image = record.images.first?.getImage()
+        
         self.destination = destinationData(
             latitude: record.latitude,
             longitude: record.longitude,
             altitude: record.altitude,
-            images: record.images[0].getImage(),
+            images: image,
             distance: formatted
         )
     }

@@ -85,12 +85,12 @@ struct destinationComponent: View {
 
     var body: some View {
         HStack {
-//            if let image = data.images {
-            Image(uiImage: data.images)
-                    .resizable()
-                    .aspectRatio(1, contentMode: .fit)
-                    .frame(maxHeight: .infinity)
-//            }
+            if let image = data.images {
+                Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(1, contentMode: .fit)
+                        .frame(maxHeight: .infinity)
+            }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(data.distance)

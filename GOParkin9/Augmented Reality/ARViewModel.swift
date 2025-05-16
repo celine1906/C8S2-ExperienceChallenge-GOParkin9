@@ -33,90 +33,105 @@ class ARViewModel: NSObject, ObservableObject, ARSessionDelegate {
     
     private var lastUserPosition: SIMD3<Float>?
     private let thresholdDistance: Float = 2.0
+    private var hasShownPinpoint = false
 
     var arrowEntity: Entity?
     var arrowAnchor: AnchorEntity?
+    
+    var pinpointEntity: Entity?
+    var pinpointAnchor: AnchorEntity?
+
     var arView: ARView?
     
     let navigationManager = NavigationManager()
     
-//    @Query(filter: #Predicate<ParkingRecord> { $0.isHistory == false }) var parkingRecords: [ParkingRecord]
-    
     private var isUpdatingArrow = false
     
+    func fetchDestinationAndBearing() async throws -> (Double, Double)? {
+        guard let context = modelContext else {
+            print("❌ Tidak ada modelContext!")
+            return nil
+        }
+
+        let descriptor = FetchDescriptor<ParkingRecord>(
+            predicate: #Predicate { $0.isHistory == false }
+        )
+
+        let records = try await MainActor.run {
+            try context.fetch(descriptor)
+        }
+
+        guard let record = records.first else {
+            print("⚠️ Tidak ada parking record aktif!")
+            return nil
+        }
+
+        let destination = CLLocationCoordinate2D(latitude: record.latitude, longitude: record.longitude)
+        let distance = navigationManager.distance(to: destination)
+        let bearing = navigationManager.angle(to: destination)
+
+        return (distance, bearing)
+    }
+    
+    func processUpdate(currentPosition: SIMD3<Float>, distance: Float) async {
+
+        do {
+            if let (distanceInMeter, bearing) = try await fetchDestinationAndBearing() {
+
+                if distanceInMeter < 20 && !hasShownPinpoint {
+                    hasShownPinpoint = true
+                    await showPinpoint(bearing: bearing, distance: distanceInMeter, userPosition: currentPosition)
+                }
+
+                if distance >= thresholdDistance && !isUpdatingArrow {
+                    isUpdatingArrow = true
+                    lastUserPosition = currentPosition
+
+                    print("📌 Last position updated: \(String(describing: lastUserPosition))")
+
+                    await updateArrow(bearing: bearing, at: currentPosition)
+
+                    isUpdatingArrow = false
+                }
+            }
+        } catch {
+            print("❌ Error fetch parkingRecords: \(error)")
+        }
+    }
+    
+    
+    
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        // Salin nilai transform ke variabel lokal → HINDARI bawa frame ke dalam Task
         let cameraTransform = frame.camera.transform
         let currentPosition = SIMD3<Float>(
             cameraTransform.columns.3.x,
             cameraTransform.columns.3.y,
             cameraTransform.columns.3.z
         )
-        
-        print("POSITION: \(currentPosition)")
 
-        // Jika belum ada posisi sebelumnya, simpan
-        guard let last = lastUserPosition else {
+        // Hitung jarak
+        let distance: Float
+        if let last = lastUserPosition {
+            distance = simd_distance(
+                SIMD2<Float>(currentPosition.x, currentPosition.z),
+                SIMD2<Float>(last.x, last.z)
+            )
+        } else {
             lastUserPosition = currentPosition
             return
         }
-        
-        let distance = simd_distance(
-            SIMD2<Float>(currentPosition.x, currentPosition.z),
-            SIMD2<Float>(last.x, last.z)
-        )
 
+        print("LAST POSITION: \(String(describing: lastUserPosition)), CURRENT POSITION: \(currentPosition), DISTANCE: \(distance)")
 
-//        let distance = simd_distance(currentPosition, last)
-        
-        print("POSITION: \(distance)")
-
-        // Jika sudah menempuh lebih dari 2 meter
-        if distance >= thresholdDistance && !isUpdatingArrow {
-            isUpdatingArrow = true
-            lastUserPosition = currentPosition
-                
-            print("Last position: \(String(describing: lastUserPosition))")
-            
-            Task {
-                do {
-                    guard let context = modelContext else {
-                        print("❌ Tidak ada modelContext!")
-                        isUpdatingArrow = false
-                        return
-                    }
-
-                    let descriptor = FetchDescriptor<ParkingRecord>(
-                        predicate: #Predicate { $0.isHistory == false }
-                    )
-
-                    let records = try await MainActor.run {
-                        try context.fetch(descriptor)
-                    }
-                    guard let record = records.first else {
-                        print("⚠️ Tidak ada parking record aktif!")
-                        isUpdatingArrow = false
-                        return
-                    }
-
-                    let destination = CLLocationCoordinate2D(latitude: record.latitude, longitude: record.longitude)
-                    let bearing = navigationManager.angle(to: destination)
-
-                    print("⬇️ Updating arrow at \(currentPosition), bearing: \(bearing)")
-                    await updateArrow(bearing: bearing, at: currentPosition)
-                    print("⬇️ Updating arrow at \(currentPosition), bearing: \(bearing)")
-
-                } catch {
-                    print("❌ Error fetch parkingRecords: \(error)")
-                }
-
-                isUpdatingArrow = false
-            }
-
+        // Jalankan task async dengan data yang aman (bukan frame langsung)
+        Task {
+            await self.processUpdate(currentPosition: currentPosition, distance: distance)
         }
     }
 
 
-    /// Load ARView and prepare the AR session
+    // Load ARView and prepare the AR session
     func loadARView() {
         state = .loading
 
@@ -151,10 +166,12 @@ class ARViewModel: NSObject, ObservableObject, ARSessionDelegate {
         }
     }
 
+
     // Update arrow direction and display in AR view
         func updateArrow(bearing: Double, at position: SIMD3<Float>) async {
             guard let arView = arView,
-                  let arrowEntity = arrowEntity else { return }
+                  let arrowEntity = arrowEntity,
+                  let cameraTransform = await arView.session.currentFrame?.camera.transform else { return }
 
             await MainActor.run {
                 // Hapus anchor sebelumnya
@@ -162,16 +179,27 @@ class ARViewModel: NSObject, ObservableObject, ARSessionDelegate {
                     arView.scene.removeAnchor(existingAnchor)
                 }
                 
-                // Buat anchor baru
+                // Buat clone dari entity
                 let arrowClone = arrowEntity.clone(recursive: true)
-                let anchor = AnchorEntity(world: position)
+                
+                // Hitung posisi di depan kamera (misalnya 1 meter)
+                let forward = SIMD3<Float>(-cameraTransform.columns.2.x,
+                                           -cameraTransform.columns.2.y,
+                                           -cameraTransform.columns.2.z)
+                let cameraPosition = SIMD3<Float>(cameraTransform.columns.3.x,
+                                                  cameraTransform.columns.3.y,
+                                                  cameraTransform.columns.3.z)
+                let arrowPosition = cameraPosition + normalize(forward) * 1.0
+
+                // Buat anchor
+                let anchor = AnchorEntity(world: arrowPosition)
                 
                 // Arahkan panah berdasarkan bearing
                 let yawInRadians = Float(bearing * .pi / 180)
                 let rotation = simd_quatf(angle: yawInRadians, axis: [0, 1, 0])
 
                 arrowClone.transform.rotation = rotation
-                arrowClone.transform.translation = SIMD3<Float>(position.x, position.y, (position.z-1))
+//                arrowClone.transform.translation = SIMD3<Float>(position.x, position.y, (position.z-1))
 
                 // Tambahkan ke anchor dan scene
                 anchor.addChild(arrowClone)
@@ -184,4 +212,43 @@ class ARViewModel: NSObject, ObservableObject, ARSessionDelegate {
                 print("🛠 Added arrow to scene at anchor position: \(anchor.transform.matrix.columns.3)")
             }
         }
+    
+    func showPinpoint(bearing: Double, distance: Double, userPosition: SIMD3<Float>) async {
+        guard let arView = arView else { return }
+
+        await MainActor.run {
+            // Hapus anchor sebelumnya
+            if let existingAnchor = pinpointAnchor {
+                arView.scene.removeAnchor(existingAnchor)
+            }
+
+            // Load pinpoint model (pastikan model ada di project)
+            guard let pinpoint = try? Entity.loadModel(named: "pointer") else { return }
+
+            // Hitung rotasi berdasarkan bearing
+            let yawInRadians = Float(bearing * .pi / 180)
+            let rotation = simd_quatf(angle: yawInRadians, axis: [0, 1, 0])
+            
+            // Hitung posisi offset dengan arah bearing
+            let direction = simd_float3(-sin(yawInRadians), 0, -cos(yawInRadians)) // arah bearing ke depan
+            let offset = direction * Float(distance)
+
+            let pinpointPosition = userPosition + offset
+            
+            let anchor = AnchorEntity(world: pinpointPosition)
+
+            // Set rotasi pinpoint supaya menghadap user / arah yang diinginkan (optional)
+            pinpoint.transform.rotation = rotation
+            pinpoint.transform.scale = SIMD3<Float>(repeating: 0.01)
+            
+            anchor.addChild(pinpoint)
+            arView.scene.anchors.append(anchor)
+
+            // Simpan referensi
+            self.pinpointEntity = pinpoint
+            self.pinpointAnchor = anchor
+
+            print("📍 Pinpoint added at: \(pinpointPosition), bearing: \(bearing)°")
+        }
     }
+}
