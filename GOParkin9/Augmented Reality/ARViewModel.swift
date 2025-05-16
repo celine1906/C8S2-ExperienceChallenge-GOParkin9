@@ -164,28 +164,19 @@ class ARViewModel: NSObject, ObservableObject, ARSessionDelegate {
                 
                 // Buat anchor baru
                 let arrowClone = arrowEntity.clone(recursive: true)
-                let anchor = AnchorEntity(world: SIMD3<Float>(position.x, position.y, position.z-1))
+                let anchor = AnchorEntity(world: position)
                 
                 // Arahkan panah berdasarkan bearing
                 let yawInRadians = Float(bearing * .pi / 180)
-                
-                let forward = normalize(SIMD3<Float>(
-                    -sin(yawInRadians),
-                    0,
-                    -cos(yawInRadians)
-                ))
-                
                 let rotation = simd_quatf(angle: yawInRadians, axis: [0, 1, 0])
-  
-                arrowClone.transform.rotation = rotation
-                arrowClone.transform.translation = SIMD3<Float>(0, 0, -1)
 
-                
+                arrowClone.transform.rotation = rotation
+                arrowClone.transform.translation = SIMD3<Float>(position.x, position.y, (position.z-1))
+
                 // Tambahkan ke anchor dan scene
                 anchor.addChild(arrowClone)
                 arView.scene.anchors.append(anchor)
-               
-
+            
                 
                 // Simpan referensi anchor terakhir
                 arrowAnchor = anchor
