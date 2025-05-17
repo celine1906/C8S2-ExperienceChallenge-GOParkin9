@@ -8,6 +8,20 @@
 import SwiftUI
 import SwiftData
 
+struct RoundedCorner: Shape {
+    var radius: CGFloat
+    var corners: UIRectCorner
+
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(
+            roundedRect: rect,
+            byRoundingCorners: corners,
+            cornerRadii: CGSize(width: radius, height: radius)
+        )
+        return Path(path.cgPath)
+    }
+}
+
 struct ARModalView: View {
     @Environment(\.modelContext) private var context
     @State var showModal: Bool = true
@@ -22,6 +36,9 @@ struct ARModalView: View {
                     Spacer()
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
+                            if let destination = modalViewModel.destination {
+                                altitudeComponent(data: destination)
+                            }
                             Spacer()
                             Button(action: {
                                 showModal.toggle()
@@ -32,20 +49,19 @@ struct ARModalView: View {
                             }
                         }
 
-                        altitudeComponent(modalViewModel: modalViewModel)
                         if let destination = modalViewModel.destination {
-                            destinationComponent(modalViewModel: modalViewModel, data: destination)
+                            destinationComponent(data: destination)
                         }
                     }
+                    .ignoresSafeArea()
+                    .frame(alignment: .bottom)
                     .padding().padding(.bottom)
                     .background(Color.white)
-                    .cornerRadius(20)
+                    .clipShape(RoundedCorner(radius: 20, corners: [.topLeft, .topRight]))
                     .shadow(radius: 10)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 220)
-//                    .padding()
                     .transition(.move(edge: .bottom))
-                }.frame(maxWidth: .infinity)
+                }
             } else {
                 VStack {
                     Spacer()
@@ -80,7 +96,6 @@ struct ARModalView: View {
 
 
 struct destinationComponent: View {
-    @ObservedObject var modalViewModel: ARModalViewModel
     var data: destinationData
 
     var body: some View {
@@ -97,7 +112,7 @@ struct destinationComponent: View {
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.black)
-                Text("to basement stairs")
+                Text("to your vehicle")
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundColor(.gray)
@@ -113,18 +128,17 @@ struct destinationComponent: View {
 
 
 struct altitudeComponent: View {
-    @ObservedObject var modalViewModel: ARModalViewModel
+    var data: destinationData
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            Image(systemName: "figure.stairs")
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "parkingsign.radiowaves.left.and.right")
                 .foregroundColor(.gray)
-            Text("You're on the Ground Floor. Go downstairs to Basement 1.")
+            Text(data.floor)
                 .font(.subheadline)
                 .foregroundColor(.black)
         }
-        .multilineTextAlignment(.leading)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

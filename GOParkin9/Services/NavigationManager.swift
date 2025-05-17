@@ -15,6 +15,8 @@ extension Double {
 
 class NavigationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
+    static let shared = NavigationManager()
+    
     private let locationManager: CLLocationManager = CLLocationManager()
     
     @Published var location: CLLocation?
@@ -28,12 +30,14 @@ class NavigationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     let threshold: Double = 5.0 // meter
     
     @Published var arrowAngle: Double = 0.0
-
+    
     
     override init() {
         super.init()
         
         locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = kCLDistanceFilterNone
         
@@ -66,23 +70,6 @@ class NavigationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         checkAuthorization()
     }
-    
-    func updateWaypointIfNeeded() {
-        guard currentWaypointIndex < waypoints.count else { return }
-        let target = waypoints[currentWaypointIndex]
-        let dist = distance(to: target)
-        
-        if dist < threshold {
-            currentWaypointIndex += 1
-            print("Moved to next waypoint \(currentWaypointIndex)")
-            lastDistance = Double.greatestFiniteMagnitude
-        } else {
-            if dist > lastDistance + 2.0 {
-                print("⚠️ Menjauh dari waypoint!")
-            }
-            lastDistance = dist
-        }
-    }
 
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -90,13 +77,6 @@ class NavigationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         DispatchQueue.main.async {
             self.location = latestLocation
             self.isUpdating = false
-            
-            self.updateWaypointIfNeeded()
-            
-            if self.currentWaypointIndex < self.waypoints.count {
-                let dest = self.waypoints[self.currentWaypointIndex]
-                self.arrowAngle = self.angle(to: dest)
-            }
         }
     }
 

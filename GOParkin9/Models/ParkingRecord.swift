@@ -53,4 +53,5 @@ struct destinationData: Identifiable {
     var altitude: Double
     var images: UIImage?
     var distance: String
+    var floor:String
 }
