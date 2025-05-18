@@ -84,7 +84,6 @@ class NavigationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         DispatchQueue.main.async {
             self.heading = newHeading
-//            print("Heading: \(newHeading.magneticHeading), \(newHeading.trueHeading)")
         }
     }
 }
@@ -117,8 +116,6 @@ extension NavigationManager {
     
     func distance(to destination: CLLocationCoordinate2D) -> Double {
         guard let from = self.location?.coordinate else { return 0.0 }
-//        print(from)
-                
         let lat1 = from.latitude.toRadians()
         let lon1 = from.longitude.toRadians()
         let lat2 = destination.latitude.toRadians()
@@ -135,8 +132,4 @@ extension NavigationManager {
         let earthRadius = 6371.0 // Radius bumi dalam kilometer
         return earthRadius * c * 1000 // Jarak dalam meter
     }
-    
-//    func getLongitude() -> Double {
-//        return Double(self.location.coordinate.latitude ?? 0.0)
-//    }
 }

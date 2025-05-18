@@ -21,6 +21,7 @@ class ParkingRecord: Identifiable {
     var createdAt: Date
     var completedAt: Date
     var floor: String
+    var pillar:String
     
     @Relationship(deleteRule: .cascade) var images: [ParkingImage] = []
     
@@ -30,6 +31,7 @@ class ParkingRecord: Identifiable {
         altitude: Double,
         isHistory: Bool,
         floor: String,
+        pillar:String,
         createdAt: Date,
 //        completedAt: Date,
         images: [ParkingImage]
@@ -43,6 +45,7 @@ class ParkingRecord: Identifiable {
         self.completedAt = Date()
         self.images = images
         self.floor = floor
+        self.pillar = pillar
     }
 }
 
@@ -54,4 +57,5 @@ struct destinationData: Identifiable {
     var images: UIImage?
     var distance: String
     var floor:String
+    var pillar:String
 }

@@ -19,7 +19,6 @@ struct DetailRecordActive: View {
     @Binding var isComplete: Bool
     
     var body: some View {
-        //        Text(String(describing: parkingRecord.images))
         
         if parkingRecord.images.isEmpty {
             Text("There's no image")
@@ -89,32 +88,53 @@ struct DetailRecordActive: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                 }
-            }.frame(maxWidth: .infinity, alignment: .leading)
-        }
-        
-        
-        Spacer()
-            .frame(height: 20)
-        
-        VStack(alignment: .leading) {
-            HStack {
-                Image(systemName: "map")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 20, height: 20)
-                    .opacity(0.6)
-                
-                Text("Location")
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .opacity(0.6)
-                
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Spacer()
+                .frame(height: 20)
             
-            Text("GOP 9, \(parkingRecord.floor)")
-                .font(.subheadline)
-                .fontWeight(.medium)
-        }
+            GridRow {
+                VStack(alignment: .leading) {
+                    HStack {
+                        Image(systemName: "stairs")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                            .opacity(0.6)
+                        
+                        Text("Floor")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .opacity(0.6)
+                        
+                    }
+                    
+                    Text("\(parkingRecord.floor)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+                VStack(alignment: .leading) {
+                    HStack {
+                        Image(systemName: "parkingsign.circle")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                            .opacity(0.6)
+                        
+                        Text("Pillar")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .opacity(0.6)
+                        
+                    }
+                    
+                    Text("\(parkingRecord.pillar)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }.frame(maxWidth: .infinity, alignment: .leading)
         
         Spacer()
             .frame(height: 20)

@@ -30,6 +30,20 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		12118D1B2DD9C58600E94B72 /* Exceptions for "GOParkin9" folder in "GOParkin9Tests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AppIntentVocabulary.plist,
+			);
+			target = 5DC0C4A22D8C1A4000E8987A /* GOParkin9Tests */;
+		};
+		12118D1C2DD9C58600E94B72 /* Exceptions for "GOParkin9" folder in "GOParkin9UITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AppIntentVocabulary.plist,
+			);
+			target = 5DC0C4AC2D8C1A4000E8987A /* GOParkin9UITests */;
+		};
 		12B2ECF12D92FADC00B19E77 /* Exceptions for "GOParkin9" folder in "GOParkin9" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -44,6 +58,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				12B2ECF12D92FADC00B19E77 /* Exceptions for "GOParkin9" folder in "GOParkin9" target */,
+				12118D1B2DD9C58600E94B72 /* Exceptions for "GOParkin9" folder in "GOParkin9Tests" target */,
+				12118D1C2DD9C58600E94B72 /* Exceptions for "GOParkin9" folder in "GOParkin9UITests" target */,
 			);
 			path = GOParkin9;
 			sourceTree = "<group>";

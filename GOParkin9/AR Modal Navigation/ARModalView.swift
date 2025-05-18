@@ -102,20 +102,19 @@ struct destinationComponent: View {
         HStack {
             if let image = data.images {
                 Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(1, contentMode: .fit)
-                        .frame(maxHeight: .infinity)
+                    .resizable()
+                    .aspectRatio(1, contentMode: .fit)
+                    .frame(maxHeight: .infinity)
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(data.distance)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.black)
-                Text("to your vehicle")
+                Text("Located close to pillar \(data.pillar)")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text("\(data.distance) walk")
                     .font(.subheadline)
-                    .fontWeight(.bold)
-                    .foregroundColor(.gray)
+                    .foregroundColor(.secondary)
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)

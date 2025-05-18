@@ -10,6 +10,7 @@ import AppIntents
 import UIKit
 import CoreLocation
 import SwiftData
+import IntentsUI
 
 // pilihan lantai parkir
 enum Floor: String, AppEnum {
@@ -42,10 +43,10 @@ struct AppIntentShortcutProvider: AppShortcutsProvider {
         AppShortcut(intent: SaveLocation(),
                     phrases:[
                         "Save parking location in \(.applicationName)",
-                        "Remember where I parked with \(.applicationName)",
-                        "Save my car location using \(.applicationName)",
+                        "Remember where I parked in \(.applicationName)",
+                        "Save my car location in \(.applicationName)",
                         "I parked my car, save it in \(.applicationName)",
-                        "Mark my parking spot with \(.applicationName)"
+                        "Mark my parking spot in \(.applicationName)"
                     ]
                     ,shortTitle: "Save Location", systemImageName: "mappin.and.ellipse")
         
@@ -53,9 +54,9 @@ struct AppIntentShortcutProvider: AppShortcutsProvider {
                     phrases: [
                         "Navigate to my vehicle in \(.applicationName)",
                         "Where did I park? Use \(.applicationName)",
-                        "Take me to my car with \(.applicationName)",
-                        "Find my parking spot using \(.applicationName)",
-                        "Help me find my car with \(.applicationName)"
+                        "Take me to my car using \(.applicationName)",
+                        "Find my parking spot in \(.applicationName)",
+                        "Help me find my car in \(.applicationName)"
                     ]
                     ,shortTitle: "Navigate", systemImageName: "location")
         
@@ -67,8 +68,9 @@ struct AppIntentShortcutProvider: AppShortcutsProvider {
 
 struct SaveLocation: AppIntent {
     @Parameter(title: "Parking Floor") var floor: Floor
+    @Parameter(title: "Parking Pillar") var pillar: String
   
-    static var title: LocalizedStringResource = LocalizedStringResource("Save Location")
+    static var title: LocalizedStringResource = LocalizedStringResource("SaveLocation")
     
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         let locationManager = CLLocationManager()
@@ -94,26 +96,37 @@ struct SaveLocation: AppIntent {
            altitude: location.altitude,
            isHistory: false,
            floor: floor.displayString,
+           pillar: pillar,
            createdAt: Date.now,
            images: []
        )
         
-        if records.isEmpty {
+        if let existingRecord = records.first {
+            // Update properti record lama
+            existingRecord.latitude = location.coordinate.latitude
+            existingRecord.longitude = location.coordinate.longitude
+            existingRecord.altitude = location.altitude
+            existingRecord.floor = floor.displayString
+            existingRecord.pillar = pillar
+            existingRecord.createdAt = Date.now
+            existingRecord.images = [] // kosongkan atau biarkan seperti sebelumnya
+        } else {
+            // Insert baru jika tidak ada
             context.insert(record)
-            print("\(location.coordinate.latitude)")
         }
+
         
         try context.save()
         
         return .result(
-            dialog: "Your parking location on \(floor) has been saved",
-            view: ResponseView(icon: "mappin.and.ellipse", message: "Parking Location Saved", description: "at \(floor.displayString)")
+            dialog: "Your parking location has been saved",
+            view: ResponseView(icon: "mappin.and.ellipse", message: "Parking Location Saved", description: "at \(floor.displayString), close to \(pillar) pillar", color: .secondary3)
         )
     }
 }
 
 struct Navigate: AppIntent {
-    static var title: LocalizedStringResource = "Navigate to Vehicle"
+    static var title: LocalizedStringResource = "Navigate"
     static var openAppWhenRun: Bool { true }
 
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
@@ -130,7 +143,7 @@ struct Navigate: AppIntent {
             print("⚠️ No active parking record found.")
             return .result(
                 dialog: "There is no active parking record saved",
-                view: ResponseView(icon: "mappin.slash", message: "No Active Parking", description: "There is no active parking record saved.")
+                view: ResponseView(icon: "mappin.slash", message: "No Active Parking", description: nil, color: .red)
             )
         } else {
             print("✅ Parking record found, triggering navigation.")

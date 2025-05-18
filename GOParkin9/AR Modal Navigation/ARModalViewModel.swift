@@ -25,7 +25,8 @@ class ARModalViewModel: ObservableObject {
             altitude: record.altitude,
             images: image,
             distance: formatted,
-            floor: record.floor
+            floor: record.floor,
+            pillar: record.pillar
         )
     }
 }

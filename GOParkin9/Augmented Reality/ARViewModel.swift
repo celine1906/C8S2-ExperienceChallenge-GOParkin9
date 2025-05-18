@@ -239,7 +239,7 @@ class ARViewModel: NSObject, ObservableObject, ARSessionDelegate {
 
             // Set rotasi pinpoint supaya menghadap user / arah yang diinginkan (optional)
             pinpoint.transform.rotation = rotation
-            pinpoint.transform.scale = SIMD3<Float>(repeating: 0.01)
+            pinpoint.transform.scale = SIMD3<Float>(repeating: 0.003)
             
             anchor.addChild(pinpoint)
             arView.scene.anchors.append(anchor)
