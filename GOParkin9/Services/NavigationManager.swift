@@ -15,16 +15,29 @@ extension Double {
 
 class NavigationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
+    static let shared = NavigationManager()
+    
     private let locationManager: CLLocationManager = CLLocationManager()
     
     @Published var location: CLLocation?
     @Published var heading: CLHeading?
     @Published var isUpdating: Bool = false
     
+    @Published var waypoints: [CLLocationCoordinate2D] = []
+    @Published var currentWaypointIndex: Int = 0
+
+    private var lastDistance: Double = Double.greatestFiniteMagnitude
+    let threshold: Double = 5.0 // meter
+    
+    @Published var arrowAngle: Double = 0.0
+    
+    
     override init() {
         super.init()
         
         locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = kCLDistanceFilterNone
         
@@ -57,20 +70,20 @@ class NavigationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         checkAuthorization()
     }
+
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let latestLocation = locations.last else { return }
         DispatchQueue.main.async {
             self.location = latestLocation
             self.isUpdating = false
-//            print("Updated location: \(latestLocation.coordinate.latitude), \(latestLocation.coordinate.longitude)")
         }
     }
+
     
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         DispatchQueue.main.async {
             self.heading = newHeading
-//            print("Heading: \(newHeading.magneticHeading), \(newHeading.trueHeading)")
         }
     }
 }
@@ -103,8 +116,6 @@ extension NavigationManager {
     
     func distance(to destination: CLLocationCoordinate2D) -> Double {
         guard let from = self.location?.coordinate else { return 0.0 }
-//        print(from)
-                
         let lat1 = from.latitude.toRadians()
         let lon1 = from.longitude.toRadians()
         let lat2 = destination.latitude.toRadians()
@@ -121,8 +132,4 @@ extension NavigationManager {
         let earthRadius = 6371.0 // Radius bumi dalam kilometer
         return earthRadius * c * 1000 // Jarak dalam meter
     }
-    
-//    func getLongitude() -> Double {
-//        return Double(self.location.coordinate.latitude ?? 0.0)
-//    }
 }

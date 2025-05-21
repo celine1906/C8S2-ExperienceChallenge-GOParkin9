@@ -21,19 +21,29 @@ struct ModalView: View {
     @State private var selectedFloor: String? = nil
     @State private var floors = ["Basement 1", "Basement 2"]
     let dateTime = Date.now
+    
+    @State private var parkingPillar = ""
+    @State private var isPillarInvalid = false
 
-    let savedLocation:CLLocationCoordinate2D
+    let savedLocation:CLLocation
+    
+    var isPillarValid: Bool {
+        parkingPillar.range(of: "^[A-Z]+[0-9]+$", options: .regularExpression) != nil
+    }
+
     
     @Environment(\.modelContext) var context
 
-    func addParkingRecord(latitude: Double, longitude: Double, images: [UIImage], floor:String) {
+    func addParkingRecord(latitude: Double, longitude: Double, altitude: Double, images: [UIImage], floor:String, pillar:String) {
         let convertedImages = images.map { ParkingImage(image: $0) }
         
         let record = ParkingRecord(
             latitude: latitude,
             longitude: longitude,
+            altitude: altitude,
             isHistory: false,
             floor: floor,
+            pillar: pillar,
             createdAt: dateTime,
             images: convertedImages
         )
@@ -60,27 +70,34 @@ struct ModalView: View {
                 }
                 Spacer()
                 Button {
-                    if let selected = selectedFloor {
+                    
+                    if let selected = selectedFloor, isPillarValid {
                         print("Button clicked")
-                        addParkingRecord(
-                            latitude: savedLocation.latitude,
-                            longitude: savedLocation.longitude,
-                            images: images,
-                            floor: selected
-                        )
-                        dismiss()
+                            addParkingRecord(
+                                latitude: savedLocation.coordinate.latitude,
+                                longitude: savedLocation.coordinate.longitude,
+                                altitude: savedLocation.altitude,
+                                images: images,
+                                floor: selected,
+                                pillar: parkingPillar
+                            )
+                            dismiss()
                     } else {
-                        showingAlertSave.toggle()
+                        if selectedFloor == nil {
+                            showingAlertSave.toggle()
+                        } else if !isPillarValid {
+                            isPillarInvalid.toggle()
+                        }
                     }
                     
                 } label: {
                     Text("Done")
                 }
-                .alert("Floor haven't selected", isPresented: $showingAlertSave) {
-                    Button("OK") {
-                    }
+                .disabled(!(selectedFloor != nil && isPillarValid))
+                .alert("Invalid pillar format", isPresented: $isPillarInvalid) {
+                    Button("OK") {}
                 } message: {
-                    Text("Please select a floor where you parked your vehicle.")
+                    Text("Pillar must contain 1 uppercase letter and 1 number (example: A1, B3).")
                 }
             }
             .padding()
@@ -108,6 +125,15 @@ struct ModalView: View {
                             }
                         }.pickerStyle(.menu)
                     }
+                
+                    HStack {
+                        Image(systemName: "p.circle")
+                        TextField("Enter parking pillar (example: A1)", text: $parkingPillar)
+                            .textInputAutocapitalization(.characters)
+                    }
+                    .padding(.bottom)
+
+                
                 Text("Take up to 8 photos of your parking spot environment")
                     .padding(.vertical)
                 GridView(images: $images, onSelectImage: { img in

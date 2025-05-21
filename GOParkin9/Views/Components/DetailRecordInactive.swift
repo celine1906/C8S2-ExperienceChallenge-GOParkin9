@@ -21,7 +21,7 @@ struct DetailRecordInactive: View {
     @State private var showingSheet: Bool = false
     
     let locationManager = NavigationManager()
-    @State private var savedLocation: CLLocationCoordinate2D?
+    @State private var savedLocation: CLLocation?
     
     var body: some View {
         VStack(alignment: .center) {
@@ -35,12 +35,6 @@ struct DetailRecordInactive: View {
                 .frame(width: 100, height: 100)
                 .foregroundColor(Color.gray)
             
-//            Text("There's no active parking record. Try to park your vehicle.")
-//                .padding(.horizontal, 30)
-//                .font(.subheadline)
-//                .fontWeight(.bold)
-//                .opacity(0.6)
-//                .multilineTextAlignment(.center)
             
             Spacer()
                 .frame(height: 80)
@@ -78,7 +72,7 @@ struct DetailRecordInactive: View {
             message: "Are you sure you are in your parking spot?",
             cancelButtonText: "No",
             confirmAction: {
-                savedLocation = locationManager.location?.coordinate
+                savedLocation = locationManager.location
             },
             confirmButtonText: "Yes"
         )

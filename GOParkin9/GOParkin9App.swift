@@ -8,6 +8,9 @@
 import SwiftUI
 import SwiftData
 
+import SwiftUI
+import SwiftData
+
 @main
 struct GOParkin9App: App {
 
@@ -15,41 +18,57 @@ struct GOParkin9App: App {
 
     @State private var isSplashActive = true
     @AppStorage("openWelcomeView") var openWelcomeView: Bool = true
-
+    @AppStorage("navigateToAR") var navigateToAR: Bool = false
     
+    init() {
+        UserDefaults.standard.set(false, forKey: "navigateToAR")
+    }
+
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([ParkingRecord.self]) // Register your model
+        let schema = Schema([ParkingRecord.self])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         return try! ModelContainer(for: schema, configurations: [config])
     }()
-    
+
     var body: some Scene {
         WindowGroup {
-            if isSplashActive {
-                SplashScreenView()
-                    .onAppear {
-                        // Hide splash screen after 3 seconds (adjust as needed)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                            withAnimation {
-                                isSplashActive = false
+            Group {
+                if isSplashActive {
+                    SplashScreenView()
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                                withAnimation {
+                                    isSplashActive = false
+                                }
                             }
                         }
-                    }
-            } else {
-//                if hasSeenWelcome {
-//                    ContentView()
-//                } else{
-//                    ContentView()
-//                        .modelContainer(sharedModelContainer)
-//                }
-                ContentView()
-                    .modelContainer(sharedModelContainer)
-                    .fullScreenCover(isPresented: $openWelcomeView) {
+                } else if navigateToAR {
+                    NavigationStack {
+                        ARCameraView()
+                            .toolbar {
+                                ToolbarItem(placement: .navigationBarLeading) {
+                                    Button {
+                                        navigateToAR = false
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: "chevron.backward")
+                                            Text("Home")
+                                        }
+                                    }
 
-                        WelcomeScreenView()
+                                }
+                            }
                     }
+
+                } else {
+                    ContentView()
+                        .fullScreenCover(isPresented: $openWelcomeView) {
+                            WelcomeScreenView()
+                        }
+                }
             }
-            //        .modelContainer(for: [ParkingRecord.self])
+            .modelContainer(sharedModelContainer)
         }
     }
 }
+
