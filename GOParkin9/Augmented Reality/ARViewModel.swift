@@ -12,6 +12,7 @@ import Combine
 import SwiftData
 import CoreLocation
 import SwiftUI
+import UIKit
 
 enum ARState {
     case loading
@@ -23,17 +24,30 @@ class ARViewModel: NSObject, ObservableObject, ARSessionDelegate {
     
     var modelContext: ModelContext?
 
+    private var _showNotification: Binding<Bool> = .constant(false)
+
     init(context: ModelContext? = nil) {
         self.modelContext = context
+        super.init()
     }
-    
-    
+
+    func setShowNotificationBinding(_ binding: Binding<Bool>) {
+        _showNotification = binding
+    }
+
+    var showNotification: Bool {
+        get { _showNotification.wrappedValue }
+        set { _showNotification.wrappedValue = newValue }
+    }
+
     @Published var state: ARState = .loading
     @Published var modelName: String = "arrow"
     
     private var lastUserPosition: SIMD3<Float>?
     private let thresholdDistance: Float = 2.0
-    private var hasShownPinpoint = false
+    var hasShownPinpoint = false
+    var hasShownNearNotification = false
+
 
     var arrowEntity: Entity?
     var arrowAnchor: AnchorEntity?
@@ -78,9 +92,21 @@ class ARViewModel: NSObject, ObservableObject, ARSessionDelegate {
         do {
             if let (distanceInMeter, bearing) = try await fetchDestinationAndBearing() {
 
-                if distanceInMeter < 20 && !hasShownPinpoint {
-                    hasShownPinpoint = true
-                    await showPinpoint(bearing: bearing, distance: distanceInMeter, userPosition: currentPosition)
+                if distanceInMeter < 7  && !hasShownNearNotification {
+                    hasShownNearNotification = true
+                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                    generator.impactOccurred()
+                    // Show notification
+                    await MainActor.run {
+                        showNotification = true
+                    }
+
+                    // Tahan notif selama 3 detik
+                    try? await Task.sleep(nanoseconds: 5_000_000_000)
+
+                    await MainActor.run {
+                        showNotification = false
+                    }
                 }
 
                 if distance >= thresholdDistance && !isUpdatingArrow {
@@ -165,13 +191,14 @@ class ARViewModel: NSObject, ObservableObject, ARSessionDelegate {
             }
         }
     }
-
-
-    // Update arrow direction and display in AR view
+    
+ 
+//     Update arrow direction and display in AR view
         func updateArrow(bearing: Double, at position: SIMD3<Float>) async {
             guard let arView = arView,
                   let arrowEntity = arrowEntity,
-                  let cameraTransform = await arView.session.currentFrame?.camera.transform else { return }
+                  let cameraTransform = await arView.session.currentFrame?.camera.transform,
+                  let pinpointAnchor = pinpointAnchor else { return }
 
             await MainActor.run {
                 // Hapus anchor sebelumnya
@@ -189,19 +216,22 @@ class ARViewModel: NSObject, ObservableObject, ARSessionDelegate {
                 let cameraPosition = SIMD3<Float>(cameraTransform.columns.3.x,
                                                   cameraTransform.columns.3.y,
                                                   cameraTransform.columns.3.z)
-                let arrowPosition = cameraPosition + normalize(forward) * 1.0
-
-                // Buat anchor
-                let anchor = AnchorEntity(world: arrowPosition)
+//                let arrowPosition = cameraPosition + normalize(forward) * 1.0
                 
-                // Arahkan panah berdasarkan bearing
-                let yawInRadians = Float(bearing * .pi / 180)
-                let rotation = simd_quatf(angle: yawInRadians, axis: [0, 1, 0])
+                // Posisi target (pinpoint) dan posisi user (current camera position)
+                let targetPosition = pinpointAnchor.position(relativeTo: nil)
+                let userToTarget = normalize(targetPosition - position)
+
+                // Hitung rotasi dari vektor userToTarget
+                let angle = atan2(userToTarget.x, userToTarget.z) // arah horizontal (XZ)
+                let correctedAngle = angle - .pi / 2
+                let rotation = simd_quatf(angle: correctedAngle, axis: [0, 1, 0])
+
+                // Posisi panah 1 meter di depan kamera
+                let arrowPosition = cameraPosition + normalize(forward) * 1.0
+                let anchor = AnchorEntity(world: arrowPosition)
 
                 arrowClone.transform.rotation = rotation
-//                arrowClone.transform.translation = SIMD3<Float>(position.x, position.y, (position.z-1))
-
-                // Tambahkan ke anchor dan scene
                 anchor.addChild(arrowClone)
                 arView.scene.anchors.append(anchor)
             

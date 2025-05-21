@@ -60,7 +60,7 @@ struct ARModalView: View {
                     .clipShape(RoundedCorner(radius: 20, corners: [.topLeft, .topRight]))
                     .shadow(radius: 10)
                     .frame(maxWidth: .infinity)
-                    .transition(.move(edge: .bottom))
+                    .transition(.move(edge: .top))
                 }
             } else {
                 VStack {
@@ -119,8 +119,8 @@ struct destinationComponent: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity)
-        .background(Color.secondary3.opacity(0.2))
+        .frame(maxWidth: .infinity, maxHeight: 80)
+        .background(Color.green.opacity(0.2))
         .cornerRadius(10)
     }
 }

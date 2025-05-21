@@ -42,21 +42,20 @@ struct AppIntentShortcutProvider: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: SaveLocation(),
                     phrases:[
-                        "Save parking location in \(.applicationName)",
-                        "Remember where I parked in \(.applicationName)",
-                        "Save my car location in \(.applicationName)",
-                        "I parked my car, save it in \(.applicationName)",
-                        "Mark my parking spot in \(.applicationName)"
+                        "Mark my parking spot in \(.applicationName)",
+//                        "Save my parking spot in \(.applicationName)",
+//                        "Record car location with \(.applicationName)",
+//                        "Mark my car spot in \(.applicationName)",
+//                        "Remember my parking spot in \(.applicationName)"
                     ]
                     ,shortTitle: "Save Location", systemImageName: "mappin.and.ellipse")
         
         AppShortcut(intent: Navigate(),
                     phrases: [
-                        "Navigate to my vehicle in \(.applicationName)",
-                        "Where did I park? Use \(.applicationName)",
-                        "Take me to my car using \(.applicationName)",
-                        "Find my parking spot in \(.applicationName)",
-                        "Help me find my car in \(.applicationName)"
+//                        "Help me find my car spot in \(.applicationName)",
+//                        "Show my saved parking in \(.applicationName)",
+                        "Guide me to my parking in \(.applicationName)",
+                        "Navigate me to my parking in \(.applicationName)"
                     ]
                     ,shortTitle: "Navigate", systemImageName: "location")
         
@@ -120,7 +119,7 @@ struct SaveLocation: AppIntent {
         
         return .result(
             dialog: "Your parking location has been saved",
-            view: ResponseView(icon: "mappin.and.ellipse", message: "Parking Location Saved", description: "at \(floor.displayString), close to \(pillar) pillar", color: .secondary3)
+            view: ResponseView(icon: "mappin.and.ellipse", message: "Parking Location Saved", description: "at \(floor.displayString), close to \(pillar) pillar", color: .green)
         )
     }
 }
